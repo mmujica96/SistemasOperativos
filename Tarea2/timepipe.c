@@ -36,12 +36,16 @@ int main (int argc,char *argv[]){
     write(p[1],&start_time, sizeof(struct timeval)); //escribir el tiempo de inicio 
     close(p[1]);//cerrar el extremo de escritura del pipe
     
-    //trabajo del hijo
-    if(execvp(argv[1],&argv[1])<0){
-      perror("execvp");
-      exit(EXIT_FAILURE);
-    }
-    exit(EXIT_SUCCESS);
+    // Preparar el comando para execvp
+        char *cmd[argc];
+        for (int i = 1; i < argc; i++) {
+            cmd[i - 1] = argv[i];
+        }
+        cmd[argc - 1] = NULL;
+
+        execvp(cmd[0], cmd);
+        perror("execvp");
+        exit(EXIT_FAILURE);
   }else{//Proceso padre
     close(p[1]);//cerrar el extremo de escritura del pipe
     
@@ -56,7 +60,7 @@ int main (int argc,char *argv[]){
     struct timeval end_time;
     gettimeofday(&end_time,NULL);
     
-    //calcular tiempo trascurrido en microseg
+    //calcular tiempo trascurrido en seg
     long segundos = end_time.tv_sec - start_time.tv_sec;
     long microseg = end_time.tv_usec - start_time.tv_usec;
     double elapsed = segundos + microseg*1e-6;
