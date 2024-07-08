@@ -7,7 +7,7 @@ time:
 	gcc -o build/time timeshmm.c
 	
 timex: 
-	gcc -o build/time timepipe.c
+	gcc -o build/timex timepipe.c
 	
 clean:
 	 rm build/*
