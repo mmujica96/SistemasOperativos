@@ -21,6 +21,7 @@
  *   |    Palette (optional)  |   0 bytes (for 24-bit RGB images)
  *   |-------------------------
  *   |       Image Data       |   file size - 54 (for 24-bit images)
+ 
  *   --------------------------
  */
 

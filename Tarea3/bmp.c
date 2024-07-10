@@ -43,39 +43,30 @@ BMP_Image* createBMPImage(FILE* fptr) {
   }
   
   BMP_Image* bmpimage = (BMP_Image*)malloc(sizeof(BMP_Image));//asignamos memoria al puntero de la BPM_Image
+  
   if(bmpimage == NULL){//si falla la asignacion de memoria
     printError(MEMORY_ERROR);
     return NULL; 
   }
-  
   //leer los 54 bytes que corresponden al encabezado BMP para almacenarlo en la estructura
-  fread(&bmpimage->header, sizeof(BMP_Header), 1, fptr);
+  fread(&(bmpimage->header), sizeof(BMP_Header), 1, fptr);
   
+  //printBMPHeader(&bmpimage->header);//comprobar la informacion del encabezado bmp
+
   //comprobando que el encabezado cumpla con los parametros establecidos
   if(!checkBMPValid(&(bmpimage->header))){
+    printError(VALID_ERROR);
     free(bmpimage);//IMPORTANTE: Liberamos la memoria asignada en caso de no ser valido
-    printError(VALID_ERROR);
     return NULL;
   }
-  
-  printBMPHeader(&bmpimage->header);//comprobar la informacion del encabezado bmp
-  
-  //verificar los campos del encabezado
-  if(bmpimage->header.bits_per_pixel !=32){
-    free(bmpimage);
-    printError(VALID_ERROR);
-    return NULL;
-  }
-  
-  //para completr los datos de la imagen
-  //bmpimage->bytes_per_pixel = bmpimage->header.bits_per_pixel / 8;
-  
+
   int ancho = bmpimage->header.width_px;
   int altura = bmpimage->header.height_px;//podemos normalizar la altura
   bmpimage->norm_height = (altura <0) ? -altura : altura;
   
   //asi mismo, asignarle memoria a la matriz de pixeles
   bmpimage->pixels= (Pixel**)malloc(bmpimage->norm_height * sizeof(Pixel*));
+
   if(bmpimage->pixels == NULL){//verificando si falla la asignacion de memoria
     printError(MEMORY_ERROR);
     free(bmpimage);
@@ -83,6 +74,8 @@ BMP_Image* createBMPImage(FILE* fptr) {
   }
   for (int i=0; i < bmpimage->norm_height; i++){ //asignando a la matriz 
     bmpimage->pixels[i] = (Pixel*)malloc(ancho * sizeof(Pixel));
+    printf("iteracion ..%d\n",i);
+    printBMPPixel(&bmpimage->pixels[i]);
     if(bmpimage->pixels[i]==NULL){
       printError(MEMORY_ERROR);
       for(int j =0; j<i; j++){ //comprobando y liberando a cada fila si falla la asignacion
@@ -93,6 +86,7 @@ BMP_Image* createBMPImage(FILE* fptr) {
       return NULL ;
     }
   }
+  printf("fin for\n");
   //fseek para mover/saltar el puntero del arch al inicio de los datps de la imagen 
   fseek(fptr, bmpimage->header.offset, SEEK_SET);
   
@@ -105,6 +99,7 @@ BMP_Image* createBMPImage(FILE* fptr) {
   //bmpimage->norm_height = altura_normalizada;
   
   printBMPImage(bmpimage);
+  printBMPHeader(&bmpimage->header);
   return bmpimage;
   
 }
@@ -136,7 +131,7 @@ void readImageData(FILE* srcFile, BMP_Image* image, int dataSize) {
 */
 void readImage(FILE *srcFile, BMP_Image * dataImage) {
   //comprobar que lo recibido sea valido
-  if(srcFile == NULL || dataImage == NULL){
+  if(srcFile == NULL){
     printError(ARGUMENT_ERROR);
     return;
   }
@@ -230,17 +225,21 @@ int checkBMPValid(BMP_Header* header) {
     return FALSE;
   }
   // Make sure we are getting 24 bits per pixel
-  if (header->bits_per_pixel != 24) {
+  if (header->bits_per_pixel != 32) {
+    printf("hasta aqui2\n");
     return FALSE;
   }
   // Make sure there is only one image plane
   if (header->planes != 1) {
+    printf("hasta aqui3\n");
     return FALSE;
   }
   // Make sure there is no compression
   if (header->compression != 0) {
+    printf("hasta aqui4\n");
     return FALSE;
   }
+  //printf("hasta aqui fin validacion \n");
   return TRUE;
 }
 
@@ -265,4 +264,9 @@ void printBMPImage(BMP_Image* image) {
   printf("data size is %ld\n", sizeof(image->pixels));
   printf("norm_height size is %d\n", image->norm_height);
   printf("bytes per pixel is %d\n", image->bytes_per_pixel);
+}
+void printBMPPixel(Pixel* pixel) {
+  printf("blue is %d\n", pixel->blue);
+  printf("green is %d\n", pixel->green);
+  printf("red %d\n", pixel->red);
 }
