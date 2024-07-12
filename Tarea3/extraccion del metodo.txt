@@ -1,0 +1,28 @@
+extraccion del metodo FilterWork del filter.c
+
+ for(int y= startRow; y < endRow; y++){
+    for(int x=0;x < width; x++){
+      int red =0, green=0, blue=0;
+      
+      for(int fy =-1; fy<=1;fy++){//aplicar el filtro de caja 3*3
+        for(int fx =-1; fx<=1;fx++){
+          int ny = y + fy;
+          int nx = x + fx;
+          
+          //comprobar limites
+          if(ny >=0 && ny < height && nx >=0 && nx < width){
+            red +=imageIn->pixels[ny][nx].red * boxFilter[fy +1][fx +1];
+            green +=imageIn->pixels[ny][nx].green * boxFilter[fy+1][fx+1];
+            blue +=imageIn->pixels[ny][nx].blue * boxFilter[fy+1][fx+1];
+          }
+        }
+      }
+      
+      //calcular el valor promedio y asignarlo al pixel de destino
+      //Pixel* destPixel= &imageOut->pixels[y][x];
+      imageOut->pixels[y][x].red =red/filtroCaja;
+      imageOut->pixels[y][x].green =green/filtroCaja;
+      imageOut->pixels[y][x].blue =blue/filtroCaja;
+      imageOut->pixels[y][x].alpha = 255;//alpha maximo, es opaco
+    }
+  }

@@ -1,17 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bmp.h"
+#include "filter.h"
 
 int main(int argc, char **argv) {
   FILE* source;
   FILE* dest;
-  BMP_Image* image = NULL;
-
+  BMP_Image* imageIn = NULL;
+  BMP_Image* imageOut = NULL;
+  int numThreads=4;
+  int boxFilter[3][3] = {
+    {1,1,1},
+    {1,1,1},
+    {1,1,1}
+  };
   if (argc != 3) {
     printError(ARGUMENT_ERROR);
     exit(EXIT_FAILURE);
   }
-  
   if((source = fopen(argv[1], "rb")) == NULL) {
     printError(FILE_ERROR);
     exit(EXIT_FAILURE);
@@ -20,19 +26,30 @@ int main(int argc, char **argv) {
     printError(FILE_ERROR);
     exit(EXIT_FAILURE);
   } 
+  
+  imageIn = malloc(sizeof(BMP_Image));
+  imageOut = malloc(sizeof(BMP_Image));
+  readImage(source, imageIn);
 
-  readImage(source, image);
-
-  if(!checkBMPValid(&image->header)) {
+  if(!checkBMPValid(&imageIn->header)) {
     printError(VALID_ERROR);
     exit(EXIT_FAILURE);
   }
+  transfImage(imageIn,imageOut);
+  if(!checkBMPValid(&imageIn->header)) {
+    printError(VALID_ERROR);
+    exit(EXIT_FAILURE);
+  }
+  
+  applyParallel(imageIn, imageOut, boxFilter, numThreads);
+  
+  writeImage(dest,imageOut);
+  
+  printBMPHeader(&imageIn->header);
+  printBMPImage(imageIn);
 
-  readImage(source, image);
-  printBMPHeader(&image->header);
-  printBMPImage(image);
-
-  freeImage(image);
+  //freeImage(imageIn);
+  //freeImage(imageOut);
   fclose(source);
   fclose(dest);
 
