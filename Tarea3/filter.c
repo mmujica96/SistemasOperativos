@@ -5,16 +5,11 @@
 #include "filter.h"
 #include "bmp.h"
 
-void apply (BMP_Image * imageIn, BMP_Image * imageOut)
+void apply (BMP_Image * imageIn, BMP_Image * imageOut, int startRow, int endRow, int boxFilter[3][3])
 {
-printf("dentro de aplly\n");
-  int boxFilter[3][3]={//filtro de desenfoque
-    {1, 1, 1},
-    {1, 1, 1},
-    {1, 1, 1},
-  };
+  
   int filtroCaja = 9;//el factor de normalizacion para el filtro de la caja 
-  for(int y = 0; y < imageIn->norm_height; y++) {
+  for(int y = startRow; y < endRow; y++) {
         for (int x = 0; x < imageIn->header.width_px; x++) {
             int red = 0, green = 0, blue = 0;
 
@@ -41,7 +36,6 @@ printf("dentro de aplly\n");
 
 void applyParallel(BMP_Image * imageIn, BMP_Image * imageOut, int boxFilter[3][3], int numThreads)
 {
-printf("inicio parallel\n");
   pthread_t* threads = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
   ThreadData* threadData = (ThreadData *) malloc(numThreads * sizeof(ThreadData));
   
@@ -53,7 +47,7 @@ printf("inicio parallel\n");
   for(int i =0; i<numThreads; i++){
     threadData[i].imageIn = imageIn;
     threadData[i].imageOut = imageOut;
-    threadData[i].startRow = i*rowsPerThread;
+    threadData[i].startRow = inicioFila;
     int finalFila = inicioFila + rowsPerThread + (remainingRows--> 0 ? 1 : 0);
     threadData[i].endRow = finalFila;
     
@@ -62,7 +56,7 @@ printf("inicio parallel\n");
          threadData[i].boxFilter[j][k] = boxFilter[j][k];
       }
     }
-    printf("antes del created con filter\n");
+    
     pthread_create(&threads[i], NULL, filterThreadWorker, &threadData[i]);
     
     inicioFila = finalFila;
@@ -72,19 +66,17 @@ printf("inicio parallel\n");
   }
   free(threadData);
   free(threads);
-  printf("fin parallel\n");
 }
 
 void *filterThreadWorker(void * args)
 {
-printf("dentro de filterthread\n");
   ThreadData *data = (ThreadData *)args;
   BMP_Image* imageIn = data->imageIn;
   BMP_Image* imageOut = data->imageOut;
-  //int startRow = data->startRow;
-  //int endRow = data->endRow;
-  //int (*boxFilter)[3] = data->boxFilter;
+  int startRow = data->startRow;
+  int endRow = data->endRow;
+  int (*boxFilter)[3] = data->boxFilter;
   
-  apply(imageIn,imageOut);
+  apply(imageIn,imageOut, startRow, endRow, boxFilter);
   pthread_exit(NULL);
 }

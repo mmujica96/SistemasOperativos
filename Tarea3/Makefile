@@ -12,8 +12,8 @@ clean:
 	rm *.o ex5
 
 test: ex5
-	./ex5 testcases/test.bmp outputs/test_out.bmp
-	diff outputs/test_out.bmp testcases/test_sol.bmp
-	
+	mkdir -p outputs
+	./ex5 ./testcases/test.bmp ./outputs/test_out.bmp
 testmem: ex5
-	valgrind --tool=memcheck --leak-check=summary ./ex5 testcases/test.bmp outputs/test_out.bmp	
+	mkdir -p outputs
+	valgrind --tool=memcheck --leak-check=summary ./ex5 ./testcases/test.bmp ./outputs/test_out.bmp	

@@ -123,19 +123,13 @@ void readImage(FILE *srcFile, BMP_Image * dataImage) {
     printError(MEMORY_ERROR);
     return;
   }
-  
-  //calculamos el tamanio de llos datos de la imagen
-  int dataSize = dataImage->bytes_per_pixel;
-  if(dataSize == 0){
-    dataSize= dataImageTemp->header.width_px*dataImageTemp->norm_height*(dataImageTemp->header.bits_per_pixel /8);
-  }
-  
+
   memcpy(dataImage, dataImageTemp, sizeof(BMP_Image));
   //liberar memoria
   free(dataImageTemp);
   
   //leemos los datosss de la imagen
-  readImageData(srcFile, dataImage, dataSize);
+  readImageData(srcFile, dataImage, dataImage->bytes_per_pixel);
   
   
 }
@@ -162,7 +156,7 @@ void writeImage(FILE *destFileName, BMP_Image* dataImage) {
   }
   
   //comprobando
-  printf("La BMPImage fue escrita correctamente\n");
+  //printf("La BMPImage fue escrita correctamente\n");
 }
 
 void transfImage(BMP_Image *imageIn, BMP_Image *imageOut)
@@ -242,8 +236,8 @@ int checkBMPValid(BMP_Header* header) {
   if (header->type != 0x4d42) {
     return FALSE;
   }
-  // Make sure we are getting 24 bits per pixel
-  if (header->bits_per_pixel != 32) {
+  // Make sure we are getting 24 bits per pixel (ahora 32 tambien deberia)
+  if (!((header->bits_per_pixel & 31) == 24) && (header->bits_per_pixel != 32)) {
     return FALSE;
   }
   // Make sure there is only one image plane
